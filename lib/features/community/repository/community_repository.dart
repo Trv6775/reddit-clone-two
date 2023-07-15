@@ -68,4 +68,14 @@ class CommunityRepository {
               CommunityModel.fromMap(event.data() as Map<String, dynamic>),
         );
   }
+
+  FutureVoid editCommunity(CommunityModel community) async {
+    try {
+      return right(_communities.doc(community.name).update(community.toMap()));
+    } on FirebaseException catch (e) {
+      throw e.message!;
+    } catch (e) {
+      return left(Failure(e.toString()));
+    }
+  }
 }

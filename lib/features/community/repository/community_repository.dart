@@ -47,6 +47,46 @@ class CommunityRepository {
     }
   }
 
+  FutureVoid joinCommunity(String communityName, String userId) async {
+    try {
+      return right(
+        _communities.doc(communityName).update(
+          {
+            'members': FieldValue.arrayUnion([userId]),
+          },
+        ),
+      );
+    } on FirebaseException catch (e) {
+      throw e.message!;
+    } catch (e) {
+      return left(
+        Failure(
+          e.toString(),
+        ),
+      );
+    }
+  }
+
+  FutureVoid leaveCommunity(String communityName, String userId) async {
+    try {
+      return right(
+        _communities.doc(communityName).update(
+          {
+            'members': FieldValue.arrayRemove([userId]),
+          },
+        ),
+      );
+    } on FirebaseException catch (e) {
+      throw e.message!;
+    } catch (e) {
+      return left(
+        Failure(
+          e.toString(),
+        ),
+      );
+    }
+  }
+
   Stream<List<CommunityModel>> getUserCommunities(String uid) {
     return _communities
         .where('members', arrayContains: uid)
@@ -83,8 +123,10 @@ class CommunityRepository {
     return _communities
         .where('name',
             isGreaterThanOrEqualTo: query.isEmpty ? 0 : query,
-            isLessThan: query.isEmpty?null: query.substring(0, query.length - 1) +
-                String.fromCharCode(query.codeUnitAt(query.length - 1) + 1))
+            isLessThan: query.isEmpty
+                ? null
+                : query.substring(0, query.length - 1) +
+                    String.fromCharCode(query.codeUnitAt(query.length - 1) + 1))
         .snapshots()
         .map((event) {
       List<CommunityModel> communities = [];
@@ -95,5 +137,20 @@ class CommunityRepository {
       }
       return communities;
     });
+  }
+
+  FutureVoid addMods(String communityName, List<String> uids) async {
+    try {
+      return right(
+        _communities.doc(communityName).update(
+          {'mods': uids},///Here we don't use FieldValue.addArray as it is
+          ///to have totally new list
+        ),
+      );
+    } on FirebaseException catch (e) {
+      throw e.message!;
+    } catch (e) {
+      return left(Failure(e.toString()));
+    }
   }
 }

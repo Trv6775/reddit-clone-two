@@ -57,10 +57,11 @@ class _EditCommunityScreenState extends ConsumerState<EditCommunityScreen> {
   @override
   Widget build(BuildContext context) {
     final isLoading = ref.watch(communityControllerProvider);
+    final currentTheme=ref.watch(themeNotifierProvider);
     return ref.watch(getCommunityByNameProvider(widget.name)).when(
           data: (community) => Scaffold(
             backgroundColor:
-                Pallete.darkModeAppTheme.appBarTheme.backgroundColor,
+                currentTheme.drawerTheme.backgroundColor,
             appBar: AppBar(
               title: const Text('Edit community'),
               centerTitle: false,
@@ -93,7 +94,7 @@ class _EditCommunityScreenState extends ConsumerState<EditCommunityScreen> {
                                   radius: const Radius.circular(9),
                                   dashPattern: const [10, 4],
                                   strokeCap: StrokeCap.round,
-                                  color: Pallete.darkModeAppTheme.textTheme
+                                  color: currentTheme.textTheme
                                       .bodyMedium!.color!,
                                   child: Container(
                                     height: 150,
@@ -106,10 +107,11 @@ class _EditCommunityScreenState extends ConsumerState<EditCommunityScreen> {
                                         : community.banner.isEmpty ||
                                                 community.banner ==
                                                     Constants.bannerDefault
-                                            ? const Center(
+                                            ?  Center(
                                                 child: Icon(
                                                   Icons.camera_alt_outlined,
                                                   size: 40,
+                                                  color: currentTheme.textTheme.bodyMedium!.color!,
                                                 ),
                                               )
                                             : Image.network(community.banner),

@@ -1,15 +1,23 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:reddit_clone_two/core/constants/constants.dart';
 import 'package:reddit_clone_two/features/auth/controller/auth_controller.dart';
 import 'package:reddit_clone_two/features/home/delegates/search_community_delegate.dart';
 import 'package:reddit_clone_two/features/home/drawers/community_list_drawer.dart';
 import 'package:reddit_clone_two/features/home/drawers/profile_drawer.dart';
 import 'package:reddit_clone_two/theme/pallete.dart';
 
-class HomeScreen extends ConsumerWidget {
-  const HomeScreen({super.key});
+class HomeScreen extends ConsumerStatefulWidget {
+  const HomeScreen({
+    Key? key,
+  }) : super(key: key);
 
+  @override
+  ConsumerState createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
   void displayDrawer(BuildContext context) {
     Scaffold.of(context).openDrawer();
   }
@@ -18,10 +26,18 @@ class HomeScreen extends ConsumerWidget {
     Scaffold.of(context).openEndDrawer();
   }
 
+  int _page = 0;
+
+  void onPageChanged(int page) {
+    setState(() {
+      _page = page;
+    });
+  }
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final user = ref.watch(userProvider)!;
-    final currentTheme=ref.watch(themeNotifierProvider);
+    final currentTheme = ref.watch(themeNotifierProvider);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Home'),
@@ -58,8 +74,12 @@ class HomeScreen extends ConsumerWidget {
       drawer: const CommunityListDrawer(),
       endDrawer: const ProfileDrawer(),
       bottomNavigationBar: CupertinoTabBar(
+        currentIndex: _page,
         activeColor: currentTheme.iconTheme.color,
         backgroundColor: currentTheme.scaffoldBackgroundColor,
+        onTap: (value) {
+          onPageChanged(value);
+        },
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
@@ -71,6 +91,7 @@ class HomeScreen extends ConsumerWidget {
           ),
         ],
       ),
+      body: Constants.tabWidgets[_page],
     );
   }
 }

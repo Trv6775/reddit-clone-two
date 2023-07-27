@@ -124,7 +124,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                                 child: Icon(
                                                   Icons.camera_alt_outlined,
                                                   size: 40,
-                                                  color: currentTheme.appBarTheme.backgroundColor,
+                                                  color: currentTheme.textTheme.bodyMedium!.color!,
                                                 ),
                                               )
                                             : Image.network(user.banner),

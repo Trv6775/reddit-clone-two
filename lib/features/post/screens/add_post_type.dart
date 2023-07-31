@@ -7,6 +7,7 @@ import 'package:reddit_clone_two/core/common/error_text.dart';
 import 'package:reddit_clone_two/core/common/loader.dart';
 import 'package:reddit_clone_two/core/utils.dart';
 import 'package:reddit_clone_two/features/community/controller/community_controller.dart';
+import 'package:reddit_clone_two/features/post/controller/post_controller.dart';
 import 'package:reddit_clone_two/models/community_model.dart';
 import 'package:reddit_clone_two/theme/pallete.dart';
 
@@ -27,6 +28,8 @@ class _AddPostTypeScreenState extends ConsumerState<AddPostTypeScreen> {
   File? bannerFile;
   final descriptionController = TextEditingController();
   final linkController = TextEditingController();
+  List<CommunityModel> communities = [];
+  CommunityModel? selectedCommunity;
 
   @override
   void dispose() {
@@ -45,14 +48,45 @@ class _AddPostTypeScreenState extends ConsumerState<AddPostTypeScreen> {
     }
   }
 
+  void sharePost() {
+    if (widget.type == 'image' &&
+        bannerFile != null &&
+        titleController.text.trim().isNotEmpty) {
+      ref.read(postControllerProvider.notifier).shareImagePost(
+            context: context,
+            title: titleController.text.trim(),
+            selectedCommunity: selectedCommunity ?? communities[0],
+            file: bannerFile,
+          );
+    } else if (widget.type == 'text' &&
+        titleController.text.trim().isNotEmpty) {
+      ref.read(postControllerProvider.notifier).shareTextPost(
+            context: context,
+            title: titleController.text.trim(),
+            selectedCommunity: selectedCommunity ?? communities[0],
+            description: descriptionController.text.trim(),
+          );
+    } else if (widget.type == 'link' &&
+        titleController.text.trim().isNotEmpty &&
+        linkController.text.trim().isNotEmpty) {
+      ref.read(postControllerProvider.notifier).shareLinkPost(
+            context: context,
+            title: titleController.text.trim(),
+            selectedCommunity: selectedCommunity ?? communities[0],
+            link: linkController.text.trim(),
+          );
+    } else {
+      showSnackBar(context, 'Please enter all the fields');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isTypeImage = widget.type == 'image';
     final isTypeText = widget.type == 'text';
     final isTypeLink = widget.type == 'link';
     final currentTheme = ref.watch(themeNotifierProvider);
-    List<CommunityModel> communities = [];
-    CommunityModel? selectedCommunity;
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Post ${widget.type}'),

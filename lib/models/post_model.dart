@@ -1,5 +1,3 @@
-import 'package:fpdart/fpdart.dart';
-
 class PostModel {
   final String id;
   final String title;
@@ -100,7 +98,8 @@ class PostModel {
       username: map['username'] ?? '',
       uid: map['uid'] ?? '',
       type: map['type'] ?? '',
-      createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt']),
+      createdAt: DateTime.fromMillisecondsSinceEpoch(
+          map['createdAt'].millisecondsSinceEpoch),
       awards: List<String>.from(map['awards']),
     );
   }

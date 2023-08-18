@@ -21,16 +21,22 @@ final postControllerProvider =
       storageRepository: storageRepository);
 });
 
+final fetchUserPostsProvider =
+    StreamProvider.family((ref, List<CommunityModel> communities) {
+  final postController = ref.watch(postControllerProvider.notifier);
+  return postController.fetchUserPosts(communities);
+});
+
 class PostController extends StateNotifier<bool> {
   final PostRepository _postRepository;
   final Ref _ref;
   final StorageRepository _storageRepository;
 
-  PostController(
-      {required PostRepository postRepository,
-      required Ref ref,
-      required StorageRepository storageRepository})
-      : _postRepository = postRepository,
+  PostController({
+    required PostRepository postRepository,
+    required Ref ref,
+    required StorageRepository storageRepository,
+  })  : _postRepository = postRepository,
         _ref = ref,
         _storageRepository = storageRepository,
         super(false);
@@ -41,9 +47,9 @@ class PostController extends StateNotifier<bool> {
     required CommunityModel selectedCommunity,
     required String description,
   }) async {
-    state = true;
+    state = true;//loading has started
     String postId = const Uuid().v1();
-    final user = _ref.watch(userProvider)!;
+    final user = _ref.read(userProvider)!;
     final PostModel post = PostModel(
       id: postId,
       title: title,
@@ -78,7 +84,7 @@ class PostController extends StateNotifier<bool> {
   }) async {
     state = true;
     String postId = const Uuid().v1();
-    final user = _ref.watch(userProvider)!;
+    final user = _ref.read(userProvider)!;
     final PostModel post = PostModel(
       id: postId,
       title: title,
@@ -113,38 +119,47 @@ class PostController extends StateNotifier<bool> {
   }) async {
     state = true;
     String postId = const Uuid().v1();
-    final user = _ref.watch(userProvider)!;
+    final user = _ref.read(userProvider)!;
     final imageRes = await _storageRepository.storeFile(
       path: '/posts/${selectedCommunity.name}',
       id: postId,
       file: file,
     );
+    imageRes.fold(
+      (l) => showSnackBar(context, l.message),
+      (r) async {
+        final PostModel post = PostModel(
+          id: postId,
+          title: title,
+          communityName: selectedCommunity.name,
+          communityProfilePic: selectedCommunity.avatar,
+          upvotes: [],
+          downvotes: [],
+          commentCount: 0,
+          username: user.name,
+          uid: user.uid,
+          type: 'image',
+          createdAt: DateTime.now(),
+          awards: [],
+          link: r,
+        );
+        final res = await _postRepository.addPost(post);
+        state = false;
+        res.fold(
+          (l) => showSnackBar(context, l.message),
+          (r) {
+            showSnackBar(context, 'Post created successfully!');
+            Routemaster.of(context).pop();
+          },
+        );
+      },
+    );
+  }
 
-    imageRes.fold((l) => showSnackBar(context, l.message), (r) async {
-      final PostModel post = PostModel(
-        id: postId,
-        title: title,
-        communityName: selectedCommunity.name,
-        communityProfilePic: selectedCommunity.avatar,
-        upvotes: [],
-        downvotes: [],
-        commentCount: 0,
-        username: user.name,
-        uid: user.uid,
-        type: 'link',
-        createdAt: DateTime.now(),
-        awards: [],
-        link: r,
-      );
-      final res = await _postRepository.addPost(post);
-      state = false;
-      res.fold(
-        (l) => showSnackBar(context, l.message),
-        (r) {
-          showSnackBar(context, 'Post created successfully!');
-          Routemaster.of(context).pop();
-        },
-      );
-    });
+  Stream<List<PostModel>> fetchUserPosts(List<CommunityModel> communities) {
+    if (communities.isNotEmpty) {
+      return _postRepository.fetchUserPosts(communities);
+    }
+    return Stream.value([]); //is an empty list
   }
 }

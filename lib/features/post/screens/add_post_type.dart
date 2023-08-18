@@ -51,30 +51,34 @@ class _AddPostTypeScreenState extends ConsumerState<AddPostTypeScreen> {
   void sharePost() {
     if (widget.type == 'image' &&
         bannerFile != null &&
-        titleController.text.trim().isNotEmpty) {
+        titleController.text.isNotEmpty) {
       ref.read(postControllerProvider.notifier).shareImagePost(
-            context: context,
-            title: titleController.text.trim(),
-            selectedCommunity: selectedCommunity ?? communities[0],
-            file: bannerFile,
-          );
+        context: context,
+        title: titleController.text.trim(),
+        selectedCommunity: selectedCommunity ?? communities[0],
+        file: bannerFile,
+      );
     } else if (widget.type == 'text' &&
-        titleController.text.trim().isNotEmpty) {
+        titleController.text
+            .isNotEmpty) {
       ref.read(postControllerProvider.notifier).shareTextPost(
-            context: context,
-            title: titleController.text.trim(),
-            selectedCommunity: selectedCommunity ?? communities[0],
-            description: descriptionController.text.trim(),
-          );
+        context: context,
+        title: titleController.text.trim(),
+        selectedCommunity: selectedCommunity ?? communities[0],
+        description: descriptionController.text.trim(),
+      );
     } else if (widget.type == 'link' &&
-        titleController.text.trim().isNotEmpty &&
-        linkController.text.trim().isNotEmpty) {
+        titleController.text
+            .isNotEmpty &&
+        linkController.text
+            .trim()
+            .isNotEmpty) {
       ref.read(postControllerProvider.notifier).shareLinkPost(
-            context: context,
-            title: titleController.text.trim(),
-            selectedCommunity: selectedCommunity ?? communities[0],
-            link: linkController.text.trim(),
-          );
+        context: context,
+        title: titleController.text.trim(),
+        selectedCommunity: selectedCommunity ?? communities[0],
+        link: linkController.text.trim(),
+      );
     } else {
       showSnackBar(context, 'Please enter all the fields');
     }
@@ -86,18 +90,23 @@ class _AddPostTypeScreenState extends ConsumerState<AddPostTypeScreen> {
     final isTypeText = widget.type == 'text';
     final isTypeLink = widget.type == 'link';
     final currentTheme = ref.watch(themeNotifierProvider);
+    final isLoading = ref.watch(postControllerProvider);
 
     return Scaffold(
       appBar: AppBar(
         title: Text('Post ${widget.type}'),
         actions: [
           TextButton(
-            onPressed: () {},
+            onPressed: () {
+              sharePost();
+            },
             child: const Text('Share'),
           ),
         ],
       ),
-      body: Padding(
+      body: isLoading
+          ? const Loader()
+          : Padding(
         padding: const EdgeInsets.all(8.0),
         child: Column(
           children: [
@@ -116,7 +125,9 @@ class _AddPostTypeScreenState extends ConsumerState<AddPostTypeScreen> {
             ),
             if (isTypeImage)
               GestureDetector(
-                onTap: () {},
+                onTap: () {
+                  selectBannerImage();
+                },
                 child: DottedBorder(
                   borderType: BorderType.RRect,
                   radius: const Radius.circular(9),
@@ -132,12 +143,13 @@ class _AddPostTypeScreenState extends ConsumerState<AddPostTypeScreen> {
                     child: bannerFile != null
                         ? Image.file(bannerFile!)
                         : Center(
-                            child: Icon(
-                              Icons.camera_alt_outlined,
-                              size: 40,
-                              color: currentTheme.textTheme.bodyMedium!.color!,
-                            ),
-                          ),
+                      child: Icon(
+                        Icons.camera_alt_outlined,
+                        size: 40,
+                        color: currentTheme
+                            .textTheme.bodyMedium!.color!,
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -170,33 +182,34 @@ class _AddPostTypeScreenState extends ConsumerState<AddPostTypeScreen> {
               child: Text('Select Community'),
             ),
             ref.watch(getUserCommunitiesProvider).when(
-                  data: (data) {
-                    communities = data;
-                    if (data.isEmpty) {
-                      return const SizedBox();
-                    }
-                    return DropdownButton(
-                      value: selectedCommunity ?? data[0],
-                      items: data.map(
+              data: (data) {
+                communities = data;
+                if (data.isEmpty) {
+                  return const SizedBox();
+                }
+                return DropdownButton(
+                  value: selectedCommunity ?? data[0],
+                  items: data.map(
                         (e) {
-                          return DropdownMenuItem(
-                            value: e,
-                            child: Text(e.name),
-                          );
-                        },
-                      ).toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          selectedCommunity = value;
-                        });
-                      },
-                    );
+                      return DropdownMenuItem(
+                        value: e,
+                        child: Text(e.name),
+                      );
+                    },
+                  ).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      selectedCommunity = value;
+                    });
                   },
-                  error: (error, stackTrace) => ErrorText(
+                );
+              },
+              error: (error, stackTrace) =>
+                  ErrorText(
                     error: error.toString(),
                   ),
-                  loading: () => const Loader(),
-                )
+              loading: () => const Loader(),
+            )
           ],
         ),
       ),

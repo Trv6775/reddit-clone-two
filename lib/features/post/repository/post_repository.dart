@@ -5,6 +5,7 @@ import 'package:reddit_clone_two/core/constants/firebase_constants.dart';
 import 'package:reddit_clone_two/core/failure.dart';
 import 'package:reddit_clone_two/core/providers/firebase_providers.dart';
 import 'package:reddit_clone_two/core/type_defs.dart';
+import 'package:reddit_clone_two/models/community_model.dart';
 import 'package:reddit_clone_two/models/post_model.dart';
 
 final postRepositoryProvider = Provider(
@@ -38,5 +39,22 @@ class PostRepository {
         ),
       );
     }
+  }
+
+  Stream<List<PostModel>> fetchUserPosts(List<CommunityModel> communities) {
+    return _posts
+        .where(
+          'communityName',
+          whereIn: communities.map((e) => e.name).toList(),
+        )
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map(
+          (event) => event.docs
+              .map(
+                (e) => PostModel.fromMap(e.data() as Map<String, dynamic>),
+              )
+              .toList(),
+        );
   }
 }
